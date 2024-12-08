@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Messagerie{% endblock %}</title>
+    {% load static %}
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <style>
+        /* Mode clair (par défaut) */
+        body {
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .bg-white {
+            background-color: #ffffff;
+        }
+
+        .text-gray-600 {
+            color: #4b5563;
+        }
+
+        .text-gray-700 {
+            color: #374151;
+        }
+
+        .text-gray-800 {
+            color: #1f2937;
+        }
+
+        .border-gray-200 {
+            border-color: #e5e7eb;
+        }
+
+        /* Mode sombre */
+        .dark {
+            background-color: #1a202c;
+            color: #e2e8f0;
+        }
+        
+        .dark .bg-white {
+            background-color: #2d3748 !important;
+        }
+        
+        .dark .bg-gray-100 {
+            background-color: #1a202c !important;
+        }
+        
+        .dark .bg-gray-50 {
+            background-color: #2d3748 !important;
+        }
+        
+        .dark .text-gray-600,
+        .dark .text-gray-700,
+        .dark .text-gray-800 {
+            color: #e2e8f0 !important;
+        }
+        
+        .dark .border-gray-200 {
+            border-color: #4a5568 !important;
+        }
+        
+        .dark .hover\:bg-gray-100:hover {
+            background-color: #4a5568 !important;
+        }
+
+        /* Formulaires */
+        input, textarea, select {
+            background-color: #ffffff;
+            color: #1f2937;
+            border-color: #e5e7eb;
+        }
+
+        .dark input,
+        .dark textarea,
+        .dark select {
+            background-color: #2d3748 !important;
+            color: #e2e8f0 !important;
+            border-color: #4a5568 !important;
+        }
+
+        /* Messages */
+        .message-bubble {
+            background-color: #ffffff;
+            color: #1f2937;
+        }
+
+        .dark .message-bubble {
+            background-color: #2d3748;
+            color: #e2e8f0;
+        }
+
+        /* .hidden masque l'élément */
+.hidden {
+    display: none;
+}
+
+/* .show l'affiche (remplace .hidden) */
+.show {
+    display: block;
+}
+
+        .action-menu {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 8px;
+    display: none; /* Sera affiché via JavaScript */
+    z-index: 10; /* Assurez-vous que le menu est devant les autres éléments */
+}
+
+/* Affichage du menu */
+.action-menu.show {
+    display: block;
+}
+    </style>
+</head>
+<body class="transition-colors duration-200">
+    <div class="flex flex-col md:flex-row h-screen">
+        <!-- Sidebar -->
+        <div class="w-full md:w-64 bg-white border-b md:border-r border-gray-200 transition-colors duration-200">
+            <div class="p-4 flex justify-between items-center">
+                <h1 class="text-xl md:text-2xl font-bold text-blue-600">Messagerie</h1>
+                <button id="themeToggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <i data-feather="sun" class="text-gray-800 dark:text-gray-200"></i>
+                </button>
+            </div>
+            <nav class="md:mt-8">
+                <ul class="flex md:flex-col space-x-4 md:space-x-0 md:space-y-2 p-4 md:p-0">
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'actu' %}" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">Actualités</a></li>
+                        <li><a href="{% url 'inbox' %}" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">Messages</a></li>
+                        <li><a href="{% url 'manage_account' %}" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">Profil</a></li>
+                        <li><a href="{% url 'about' %}" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">A propos</a></li> <!-- Nouveau lien -->
+                        <li><a href="{% url 'logout' %}" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">Se déconnecter</a></li>
+                    {% else %}
+
+                        <li><a href="{% url 'login' %}" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">Se connecter</a></li>
+                        <li><a href="{% url 'signup' %}" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">S'inscrire</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Main content -->
+        <div class="flex-1 flex flex-col overflow-hidden bg-gray-100">
+            <div class="bg-white shadow transition-colors duration-200">
+                <div class="container mx-auto px-4 py-2 flex justify-between items-center">
+                    {% block header %}{% endblock %}
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        const body = document.body;
+        const sunIcon = `<i data-feather="sun" class="text-gray-800 dark:text-gray-200"></i>`;
+        const moonIcon = `<i data-feather="moon" class="text-gray-800 dark:text-gray-200"></i>`;
+
+        function setTheme(isDark) {
+            html.classList.toggle('dark', isDark);
+            body.style.backgroundColor = isDark ? '#1a202c' : '#f3f4f6';
+            themeToggle.innerHTML = isDark ? sunIcon : moonIcon;
+            localStorage.setItem('darkMode', isDark);
+            feather.replace();
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const isDark = !html.classList.contains('dark');
+            setTheme(isDark);
+        });
+
+        // Set initial theme
+        const savedTheme = localStorage.getItem('darkMode') === 'true';
+        setTheme(savedTheme);
+    </script>
+    <footer class="block px-4 py-2 hover:bg-gray-100 text-gray-900">copyright &copy;2024 create by Leomyre</footer>
+</body>
+</html>
